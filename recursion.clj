@@ -1,3 +1,10 @@
+;----------------------------------------------------------
+; Activity: Recursive Functions, Part I
+; Date: January 28, 2016.
+; Author:
+;          A01165792 Diego Monroy Fraustro
+;----------------------------------------------------------
+
 (use 'clojure.test)
 
 (defn my-count
@@ -121,6 +128,19 @@
   (if (empty? B) A
     (my-concat (cons-end (first B) A) (rest B))))
 
-(my-concat '(a b c) '(1 2 3))
+(defn deep-reverse
+  "Returns the input list in reverse order, and also
+  reverses any lists within."
+  [l]
+  (loop [l l
+         res ()]
+    (if (empty? l) res
+      (if (list? (first l)) (recur (rest l) (cons (deep-reverse (first l)) res))
+        (recur (rest l) (cons (first l) res))))))
+
+(deftest test-deep-reverse
+  (is (= () (deep-reverse ())))
+  (is (= '(3 (d c b) a) (deep-reverse '(a (b c d) 3))))
+  (is (= '(((6 5) 4) 3 (2 1)) (deep-reverse '((1 2) 3 (4 (5 6)))))))
 
 (run-tests)
