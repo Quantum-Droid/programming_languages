@@ -5,6 +5,8 @@
 ;          A01165792 Diego Monroy Fraustro
 ;----------------------------------------------------------
 
+(use 'clojure.test)
+
 (defn aprox=
   "Checks if x is approximately equal to y. Returns true
   if |x - y| < epsilon, or false otherwise."
@@ -21,5 +23,76 @@
   (loop [l l
          i 0
          res ()]
-    (if (empty? l) res
-      (func (i (first l)))
+    (if (empty? l) (reverse res)
+      (recur (rest l) (inc i) (cons (func i (first l)) res)))))
+
+(deftest test-my-map-indexed
+  (is (= () (my-map-indexed vector ())))
+  (is (= '([0 a] [1 b] [2 c] [3 d])
+         (my-map-indexed vector '(a b c d))))
+  (is (= '(10 4 -2 8 5 5 13)
+         (my-map-indexed + '(10 3 -4 5 1 0 7))))
+  (is (= '(0 1 -4 3 1 0 6)
+         (my-map-indexed min '(10 3 -4 5 1 0 7)))))
+
+(defn my-drop-while
+  "Takes two arguments: a function f and a list lst. It returns
+  a list of items from lst dropping the initial items that
+  evaluate to true when passed to f. Once a false value is
+  encountered, the rest of the list is returned."
+  [func l]
+  (loop [l l
+         res ()]
+    (if (empty? l) (reverse res)
+      (if (func (first l)) (recur (rest l) res)
+        (concat l res)))))
+
+(deftest test-my-drop-while
+  (is (= () (my-drop-while neg? ())))
+  (is (= '(0 1 2 3 4)
+         (my-drop-while
+           neg?
+           '(-10 -9 -8 -7 -6 -5 -4 -3 -2 -1 0 1 2 3 4))))
+  (is (= '(2 three 4 five)
+         (my-drop-while
+           symbol?
+           '(zero one 2 three 4 five))))
+  (is (= '(0 one 2 three 4 five)
+         (my-drop-while
+           symbol?
+           '(0 one 2 three 4 five)))))
+
+(defn bisection
+  "A root-finding algorithm which works by repeatedly dividing
+  an interval in half and then selecting the subinterval in
+  which the root exists."
+  [a b f]
+  (def c (/ (+ a b) 2))
+  (if (< (Math/abs (f c)) 0.000000000000001) c
+    (if (or (and (pos? (f a)) (neg? (f c))) (and (neg? (f a)) (pos? (f c)))) (bisection a c f)
+      (bisection c b f))))
+
+(deftest test-bisection
+  (is (aprox= 0.0001 3.0 (bisection 1 4 (fn [x] (* (- x 3) (+ x 4))))))
+  (is (aprox= 0.0001 -4.0 (bisection -5 0 (fn [x] (* (- x 3) (+ x 4))))))
+  (is (aprox= 0.0001 Math/PI (bisection 1 4 (fn [x] (Math/sin x)))))
+  (is (aprox= 0.0001 (* 2 Math/PI) (bisection 5 10 (fn [x] (Math/sin x)))))
+  (is (aprox= 0.0001 1.618033988749895
+                     (bisection 1 2 (fn [x] (- (* x x) x 1)))))
+  (is (aprox= 0.0001 -0.6180339887498948
+                     (bisection -10 1 (fn [x] (- (* x x) x 1))))))
+
+(bisection 5 10 (fn [x] (Math/sin x)))
+(* 2 Math/PI)
+(bisection 1 4 (fn [x] (* (- x 3) (+ x 4))))
+(bisection 1 4 (fn [x] (Math/sin x)))
+(Math/PI)
+
+(defn deriv
+  "Takes f and h as its arguments, and returns a new function
+  that takes x as argument, and which represents the derivate
+  of f given a certain value for h."
+  [f h]
+
+
+(run-tests)
