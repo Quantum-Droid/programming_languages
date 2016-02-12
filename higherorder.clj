@@ -62,13 +62,18 @@
            symbol?
            '(0 one 2 three 4 five)))))
 
+(defn abs
+  "Because Math/abs doesn't work."
+  [n]
+  (max n (- n)))
+
 (defn bisection
   "A root-finding algorithm which works by repeatedly dividing
   an interval in half and then selecting the subinterval in
   which the root exists."
   [a b f]
   (def c (/ (+ a b) 2))
-  (if (< (Math/abs (f c)) 0.000000000000001) c
+  (if (< (abs (f c)) 0.000000000000001) c
     (if (or (and (pos? (f a)) (neg? (f c))) (and (neg? (f a)) (pos? (f c)))) (bisection a c f)
       (bisection c b f))))
 
@@ -82,17 +87,66 @@
   (is (aprox= 0.0001 -0.6180339887498948
                      (bisection -10 1 (fn [x] (- (* x x) x 1))))))
 
-(bisection 5 10 (fn [x] (Math/sin x)))
-(* 2 Math/PI)
-(bisection 1 4 (fn [x] (* (- x 3) (+ x 4))))
-(bisection 1 4 (fn [x] (Math/sin x)))
-(Math/PI)
-
 (defn deriv
   "Takes f and h as its arguments, and returns a new function
   that takes x as argument, and which represents the derivate
   of f given a certain value for h."
   [f h]
+  (fn [x] (/ (- (f (+ x h)) (f x)) h)))
 
+(defn f [x] (* x x x))
+(def df (deriv f 0.001))
+(def ddf (deriv df 0.001))
+(def dddf (deriv ddf 0.001))
+
+(deftest test-deriv
+  (is (aprox= 0.05 75 (df 5)))
+  (is (aprox= 0.05 30 (ddf 5)))
+  (is (aprox= 0.05 6 (dddf 5))))
+
+;; ===== START OF EXCERCISE 5 =====
+
+(defn integral_yk
+  "Calculating yk value for integral function."
+  [f a k n h i]
+  (if (or (= k 0) (= k n)) (def m 1)
+    (def m (if (true? i) 4 2)))
+  (* m (f (+ a (* k h)))))
+
+(defn integral_sumY
+  "Sums all the Y-values for integral function."
+  [f a n h]
+  (loop [k 0
+         i false
+         res 0]
+    (if (> k n) res
+      (recur (inc k) (not i) (+ res (integral_yk f a k n h i))))))
+
+(defn integral
+  "Takes as arguments a, b, n, and f. It returns the value of
+  the integral, using Simpson's rule."
+  [a b n f]
+  (def h (/ (- b a) n))
+  (* (/ h 3) (integral_sumY f a n h)))
+
+(deftest test-integral
+  (is (= 1/4 (integral 0 1 10 (fn [x] (* x x x)))))
+  (is (= 21/4
+         (integral 1 2 10
+           (fn [x]
+             (integral 3 4 10
+               (fn [y]
+                 (* x y))))))))
+
+; f -> function
+; a -> Integral value a
+; b -> Integral value b
+; k -> current index on Yk
+; n -> n: number of iterations of Yk (0, n)
+; h -> Integral value h
+; i -> boolean indicating whether it's 2 or 4
+; m -> either 2 or 4
+
+;; ===== END OF EXCERCISE 5 =====
 
 (run-tests)
