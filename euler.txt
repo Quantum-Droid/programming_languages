@@ -271,7 +271,7 @@
             (map-indexed
      (fn [i x] (if (= x largest) (inc i))) serie))))
 
-; ---------- Problem 16: NOPE
+; ---------- Problem 16: Not enough time :(
 
 (defn power-digit-sum
   "Problem 16."

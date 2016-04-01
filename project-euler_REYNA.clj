@@ -1,142 +1,163 @@
-; Diego Monroy Fraustro A01165792
-; Username: QuantumDroid
-; Problems solved: 10
 
-; ---------- Problem #: Result
+(ns euler)
 
-; ---------- +++++ is prime?
+;=== #2 Even Fib =============
+;=== answer 4613732 ==========
+(def fib-serie
+  (lazy-cat [0 1]
+            (map + fib-serie (rest fib-serie))))
 
-(defn is-prime?
-  "Is this prime?"
+(defn even-fib
+  "Sum of the even fibonacci sequence up to n"
   [n]
-  (if (= n 1) false
-    (loop [i 2
-           n n]
-      (if (= i n) true
-        (if (zero? (mod n i)) false
-          (recur (inc i) n))))))
+  (reduce + (take-while (partial >= n)
+                        (filter even? fib-serie))))
+(even-fib 4000000)
 
-; ---------- +++++ explode to digits
-
-(defn explode-to-digits
+;=== #3 Larges Prime Factor ===
+;=== answer 6857 ==============
+;!!TAKES A LOT OF TIME BUT WORKS ._.
+(defn prime?
+  "Returns true if n is a prime number"
   [n]
-  (if (= n 0)
-    []
-    (let [d (rem n 10)
-          r (quot n 10)]
-      (conj (explode-to-digits r) d))))
-
-; ---------- +++++ sum of digits
-
-(defn sum-of-digits
-  [n]
-  (reduce + (explode-to-digits n)))
-
-; ---------- Problem 3: 6857
+  (if (even? n) false
+    (let [root (num (int (Math/sqrt n)))]
+      (loop [i 3]
+        (if (> i root) true
+          (if (zero? (mod n i)) false
+            (recur (+ i 2))))))))
 
 (defn factors
   "Returns a list with the factors of n"
   [n]
 	(filter #(zero? (rem n %)) (range 1 (inc n))))
 
-(defn largest-prime-factor
-  "Problem 3."
+(defn max-prime
+  "Returns the max prime factor of n"
   [n]
-  (first (reverse (filter max (filter is-prime? (factors n))))))
+  (first (reverse (filter max (filter prime? (factors n))))))
 
-(largest-prime-factor 600851475143)
+;=== #4 Largest palindrome product ==========
+;=== answer 906609 ==========================
+(defn palindrome?
+  "Returns true if s is palindrome"
+  [s]
+  (= (reverse (str s) ) (seq (str s))))
 
-; ---------- Problem 4: 906609
+(apply max
+       (filter palindrome?
+               (for
+                   [a (range 100 1000)
+                    b (range 100 1000)]
+                 (* a b))))
 
-(defn is-palindrome?
+;=== #5 Smallest multiple ======
+;===answer 232792560 ===========
+(defn gcd
+  "Returns the greater common divisor of a & b"
+  [a b]
+  (if (zero? b) a (recur b (mod a b))))
+
+(defn lcm
+  "Returns the least common divisor of a & b"
+  [a b]
+  (/ (* a b) (gcd a b)))
+
+(defn small-mult
+  "Finds the smallest number that can be evenly divided
+  by all numbers from start to end"
+  [start end]
+  (reduce #(lcm %1 %2) (range start (inc end))))
+
+
+;=== #6 Sum square ============
+;== answer 25164150 ===========
+
+(def sum-square
+  "Finds the difference between the sum of the squares of the first 100
+  and the square of the sum"
+  (- (* (reduce + (range 1 101)) (reduce + (range 1 101)))
+     (reduce + (map #(* % %) (range 1 101)))))
+
+;sum-square
+
+;=== #7 10001st prime =========
+;=== answer 104759 ============
+(defn nth-prime
+  "Returns the nth prime of n"
   [n]
-  (def num-string (seq (str n)))
-  (= num-string (reverse num-string)))
+  (->>
+   (iterate #(+ 1 %) 2)
+   (filter prime? ,)
+   (take n ,)
+   (last ,)))
 
-(defn largest-palindrome
-  "Problem 4:
-  Find the largest palindrome made from the product of two 3-digit numbers."
-  [x y]
-  (last (sort (loop [x x
-              y y
-              res ()]
-           (if (= x y 100) res
-             (if (= x 100) (recur 999 (dec y) (if (is-palindrome? (* x y)) (cons (* x y) res) res))
-               (recur (dec x) y (if (is-palindrome? (* x y)) (cons (* x y) res) res))))))))
+;=== #9 Special Pythagorean triplet ===============
+;=== answer 31875000 ==============================
+;=== MAY TAKE A WHILE. UNCOMMENT TO USE!
 
-(largest-palindrome 999 999)
+;; (doall
+;;  (for [a (range 1 1000)
+;;        b (range a 1000)
+;;        c (range b 1000)
 
-; ---------- Problem 5: 232792560
+;;        :let [a2 (* a a)
+;;              b2 (* b b)
+;;              c2 (* c c)]
+;;        :when (and (= 1000 (+ a b c)) (= c2 (+ a2 b2)))]
+;;    (* a b c)))
 
-(defn divisible-by-20s
-  "Checks wether the number is divisible by
-  1-20."
-  [x]
-  (loop [x x
-         i 1]
-    (if (> i 20) true
-      (if (= 0 (mod x i)) (recur x (inc i))
-        false))))
-
-(defn smallest-multiple
-  "Problem 5:
-  What is the smallest positive number that is evenly divisible
-  by all of the numbers from 1 to 20?"
-  [n]
-  (loop [n n]
-    (if (divisible-by-20s n) n
-      (recur (inc n)))))
-
-(smallest-multiple 20)
-
-; ---------- Problem 6: 25164150
-
-(defn sum-square-difference
-  "Problem 6:
-  Find the difference between the sum of the squares of the first one
-  hundred natural numbers and the square of the sum."
-  [n]
-  (def sum-of-squares (loop [n n
-                             res 0]
-                        (if (zero? n) res
-                          (recur (dec n) (+ res (* n n))))))
-  (def sums (loop [n n
-                   res 0]
-              (if (zero? n) res
-                (recur (dec n) (+ res n)))))
-  (- (* sums sums) sum-of-squares))
-
-(sum-square-difference 100)
-
-; ---------- Problem 7: 104743
-
-(defn d10001st-prime
-  "Problem 7."
-  [n]
-  (loop [x 0
-         i 2
-         res 0]
-    (if (= x n) res
-      (if (is-prime? i) (recur (inc x) (inc i) i)
-        (recur x (inc i) res)))))
-
-(d10001st-prime 10001)
-
-; ---------- Problem 10: 14291382892
+;=== #10 Sumation of primes =====
+;=== answer 142913828922 ========
 
 (defn sum-primes
   "Returns the sum of primes below n"
   [n]
   (->>
    (iterate #(+ 1 %) 2)
-   (filter is-prime? ,)
+   (filter prime? ,)
    (take-while #(<= % n))
-   (reduce + ,)
-   (+ 2 ,)))
+   (reduce + ,)))
 
-(sum-primes 2000000)
+(+ 2 (sum-primes 2000000))
 
-; ---------- Problem 13: 5537376230 (Only 10 first digits)
+
+;=== #14 Longest Collatz sequence ===
+;=== answer 837799 ==================
+(defn collatz
+  "Returns the collatz sequence of n"
+  [n]
+  (loop [n n
+         lst ()]
+    (cond
+     (= n 1) (reverse (cons 1 lst))
+     (even? n) (recur (/ n 2)
+                      (cons n lst))
+     :else (recur (+ 1 (* 3 n)) (cons n lst)))))
+
+(defn count-collatz
+  "Returns the number of terms of the collatz
+  sequence below n"
+  [n]
+  (->>
+   (iterate #(+ 1 %) 1)
+   (take n)
+   (map collatz ,)
+   (map count ,)))
+
+(defn longest-collatz
+  "Returns the longest collatz sequence under n"
+  [n]
+  (let [largest (apply max (count-collatz n))
+        serie (count-collatz n)]
+    (filter (complement nil?)
+            (map-indexed
+     (fn [i x] (if (= x largest) (inc i))) serie))))
+
+
+;=== #13 Large sum ============================================
+;=== answer 5537376230 ========================================
+;WARNING!! NASTY APROACH. TAKE FIRST 10 NUMBERS OF RESULT
 
 (reduce + '(37107287533902102798797998220837590246510135740250
 46376937677490009712648124896970078050417018260538
@@ -238,59 +259,3 @@
 72107838435069186155435662884062257473692284509516
 20849603980134001723930671666823555245252804609722
 53503534226472524250874054075591789781264330331690))
-
-; ---------- Problem 14: 837799
-
-(defn collatz
-  "Returns the collatz sequence of n"
-  [n]
-  (loop [n n
-         lst ()]
-    (cond
-     (= n 1) (reverse (cons 1 lst))
-     (even? n) (recur (/ n 2)
-                      (cons n lst))
-     :else (recur (+ 1 (* 3 n)) (cons n lst)))))
-
-(defn count-collatz
-  "Returns the number of terms of the collatz
-  sequence below n"
-  [n]
-  (->>
-   (iterate #(+ 1 %) 1)
-   (take n)
-   (map collatz ,)
-   (map count ,)))
-
-(defn longest-collatz
-  "Returns the longest collatz sequence under n"
-  [n]
-  (let [largest (apply max (count-collatz n))
-        serie (count-collatz n)]
-    (filter (complement nil?)
-            (map-indexed
-     (fn [i x] (if (= x largest) (inc i))) serie))))
-
-; ---------- Problem 16: NOPE
-
-(defn power-digit-sum
-  "Problem 16."
-  [n]
-  (sum-of-digits (loop [i 0
-                        res n]
-                   (if (= n 1000) res
-                     (recur (inc i) (*' res n))))))
-
-(power-digit-sum 2)
-
-; ---------- Problem 20: 648
-
-(defn factorial-digit-sum
-  "Problem 20."
-  [n]
-  (sum-of-digits (loop [n n
-                        res 1]
-                   (if (= n 1) res
-                     (recur (dec n) (*' res n))))))
-
-(factorial-digit-sum 100)
